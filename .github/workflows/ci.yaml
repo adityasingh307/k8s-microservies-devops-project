@@ -5,8 +5,12 @@ name: CI-product-catalog-server
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "src/product-catalog/**"
   push:
     branches: [main]
+    paths:
+      - "src/product-catalog/**"
 
 jobs:
   build:
