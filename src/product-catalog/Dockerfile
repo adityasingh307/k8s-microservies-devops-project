@@ -1,31 +1,18 @@
 FROM golang:1.22-alpine AS builder
+WORKDIR /app
 
-WORKDIR /usr/src/app/
-
-# Use Go build cache for dependencies
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    mkdir -p /root/.cache/go-build
-
-# Copy
 COPY go.mod go.sum ./
-
-# Download
 RUN go mod download
 
-# Copy the rest of the source code
 COPY . .
 
-RUN go build -o product-catalog .
+RUN CGO_ENABLED=0 go build -o /bin/server .
 
-####################################
+FROM alpine
+WORKDIR /app
 
-FROM alpine AS release
-
-WORKDIR /usr/src/app/
-
-COPY ./products/ ./products/
-COPY --from=builder /usr/src/app/product-catalog/ ./
+COPY --from=builder /app/products ./products
+COPY --from=builder /bin/server .
 
 ENV PRODUCT_CATALOG_PORT=8088
-ENTRYPOINT [ "./product-catalog" ]
+CMD ["./server"]
